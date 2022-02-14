@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:motion_sensor_exemple/high_pass_filter.dart';
 
 import 'package:motion_sensor_exemple/motion_sensor_text.dart';
-import 'package:sensors_plus/sensors_plus.dart';
+
+import 'package:provider/provider.dart';
+import 'components/motion_container.dart';
+import 'components/record_button.dart';
+import 'record_imu.dart';
 
 class HomePage extends StatelessWidget {
   final String title;
-  final _highpassFilter = HighPassFilter();
+
   HomePage({Key? key, required this.title}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final RecordIMU record = context.read();
+
     return Scaffold(
       appBar: AppBar(
         title: Center(
@@ -20,51 +25,31 @@ class HomePage extends StatelessWidget {
       body: Center(
         child: Column(
           children: <Widget>[
-            Expanded(
+            Flexible(
+                flex: 3,
                 child: MotionContainer(
-              name: 'Accelerometer',
-              child: Column(
-                children: [
-                  MotionSensorText(
-                      motionEvents: accelerometerEvents.asyncMap(
-                          (event) => <double>[event.x, event.y, event.z])),
-                  const Text('Filtered'),
-                  MotionSensorText(
-                      motionEvents: accelerometerEvents.asyncMap((event) =>
-                          _highpassFilter
-                              .filter(<double>[event.x, event.y, event.z]))),
-                ],
-              ),
-            )),
-            Expanded(
+                  name: 'Accelerometer',
+                  child: Column(
+                    children: [
+                      MotionSensorText(motionEvents: record.accelerometerSteam),
+                      const Text('Filtered'),
+                      MotionSensorText(
+                        motionEvents: record.withoutGravityAccelerometerStream,
+                      ),
+                    ],
+                  ),
+                )),
+            Flexible(
+              flex: 3,
               child: MotionContainer(
                 name: 'Gyroscope',
                 child: MotionSensorText(
-                    motionEvents: gyroscopeEvents.asyncMap(
-                        (event) => <double>[event.x, event.y, event.z])),
+                  motionEvents: record.gyroscopeSteam,
+                ),
               ),
             ),
+            const Flexible(flex: 1, child: RecordButton())
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class MotionContainer extends StatelessWidget {
-  const MotionContainer({required this.name, required this.child, Key? key})
-      : super(key: key);
-  final String name;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      child: Center(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [Text(name), child],
         ),
       ),
     );
